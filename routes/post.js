@@ -37,4 +37,26 @@ router.get('/get-posts', (req, res) => {
     });
 });
 
+router.post('/create-post', upload.single('media'), (req, res) => {
+    const userID = req.body.userID; // Get userID from the request body
+    const content = req.body.caption; // Get content from the request body
+    const mediaFile = req.file ? path.join('uploads', req.file.filename) : null; // Handle media file
+
+    const query = `INSERT INTO Posts (User ID, PostContent, PostDate, MediaFiles, CommentCount, LikeCount) VALUES (?, ?, NOW(), ?, 0, 0)`;
+    connection.query(query, [userID, content, JSON.stringify(mediaFile)], (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+
+        res.status(201).json({
+            message: 'Post created successfully',
+            postID: results.insertId,
+            content,
+            mediaFile,
+            timestamp: new Date(), // Include timestamp for consistency
+            commentCount: 0, // Initialize comment count
+            likeCount: 0 // Initialize like count
+        });
+    });
+});
 module.exports = router;
