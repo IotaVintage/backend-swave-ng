@@ -172,7 +172,7 @@ router.get('/profile/:unpID', (req, res) => {
     }
 
     const query = `
-        SELECT UnpID, Fname, Mname, Lname, CollegeID, Program, ProfilePic, CoverPhoto, Bio
+        SELECT UnpID, Fname, Mname, Lname, College, Program, ProfilePic, CoverPhoto, Bio
         FROM USERS
         WHERE UnpID = ?
     `;
@@ -263,7 +263,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Upload Profile Picture
-router.uploadProfilePic = (req, res) => {
+router.post('/upload-profile-pic', (req, res) => {
     const file = req.file;
     const unpID = req.body.unpID;
 
@@ -281,9 +281,9 @@ router.uploadProfilePic = (req, res) => {
 
         res.json({ filePath });
     });
-};
+});
 
-router.uploadCoverPhoto = (req, res) => {
+router.post('/upload-cover-photo', (req, res) => {
     const file = req.file;
     const unpID = req.body.unpID;
 
@@ -301,9 +301,9 @@ router.uploadCoverPhoto = (req, res) => {
 
         res.json({ filePath });
     });
-};
+});
 
-router.deleteImage = (req, res) => {
+router.delete('/delete-image',(req, res) => {
     const { unpID, type } = req.body;
 
     const column = type === 'ProfilePic' ? 'ProfilePic' : 'CoverPhoto';
@@ -316,9 +316,9 @@ router.deleteImage = (req, res) => {
 
         res.json({ message: `${type} deleted successfully` });
     });
-};
+});
 
-router.fetchImages = (req, res) => {
+router.get('/fetch-images',(req, res) => {
     const { unpID } = req.params;
 
     const query = `
@@ -338,7 +338,7 @@ router.fetchImages = (req, res) => {
 
         res.json(results[0]);
     });
-};
+});
 
 module.exports = router;
 
