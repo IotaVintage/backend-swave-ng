@@ -256,30 +256,89 @@ const storage = multer.diskStorage({
         cb(null, 'uploads/');
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname)); // Use current timestamp for unique file name
+        cb(null, Date.now() + path.extname(file.originalname));
     }
 });
 
 const upload = multer({ storage: storage });
 
 // Upload Profile Picture
-router.post('/upload-profile-pic', upload.single('profilePic'), (req, res) => {
-    const { unpID } = req.body;
-    const filePath = req.file.path;
+router.uploadProfilePic = (req, res) => {
+    const file = req.file;
+    const unpID = req.body.unpID;
+
+    if (!file) {
+        return res.status(400).json({ error: 'No profile picture uploaded' });
+    }
+
+    const filePath = `/uploads/${file.filename}`;
+
+    const query = `UPDATE USERS SET ProfilePic = ? WHERE UnpID = ?`;
+    db.query(query, [filePath, unpID], (err) => {
+        if (err) {
+            return res.status(500).json({ error: 'Database update failed' });
+        }
+
+        res.json({ filePath });
+    });
+};
+
+router.uploadCoverPhoto = (req, res) => {
+    const file = req.file;
+    const unpID = req.body.unpID;
+
+    if (!file) {
+        return res.status(400).json({ error: 'No cover photo uploaded' });
+    }
+
+    const filePath = `/uploads/${file.filename}`;
+
+    const query = `UPDATE USERS SET CoverPhoto = ? WHERE UnpID = ?`;
+    db.query(query, [filePath, unpID], (err) => {
+        if (err) {
+            return res.status(500).json({ error: 'Database update failed' });
+        }
+
+        res.json({ filePath });
+    });
+};
+
+router.deleteImage = (req, res) => {
+    const { unpID, type } = req.body;
+
+    const column = type === 'ProfilePic' ? 'ProfilePic' : 'CoverPhoto';
+
+    const query = `UPDATE USERS SET ${column} = NULL WHERE UnpID = ?`;
+    db.query(query, [unpID], (err) => {
+        if (err) {
+            return res.status(500).json({ error: 'Failed to delete image from database' });
+        }
+
+        res.json({ message: `${type} deleted successfully` });
+    });
+};
+
+router.fetchImages = (req, res) => {
+    const { unpID } = req.params;
 
     const query = `
-        UPDATE USERS
-        SET ProfilePic = ?
+        SELECT ProfilePic, CoverPhoto
+        FROM USERS
         WHERE UnpID = ?
     `;
 
-    connection.query(query, [filePath, unpID], (err) => {
+    db.query(query, [unpID], (err, results) => {
         if (err) {
-            return res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: 'Database query failed: ' + err.message });
         }
 
-        res.json({ message: 'Profile picture uploaded successfully', filePath });
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Profile not found for the given unpID' });
+        }
+
+        res.json(results[0]);
     });
-});
+};
 
 module.exports = router;
+
