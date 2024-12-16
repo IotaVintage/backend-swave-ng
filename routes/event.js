@@ -51,26 +51,28 @@ router.get('/get-month-events', (req, res) => {
     });
 });
 
-router.post('/create-event', (req, res) => {
-    const { eventName, eventDate, description } = req.body;
+// Configure multer for handling form-data
+const upload = multer(); // In-memory storage or disk storage can be configured
+
+router.post('/create-event', upload.none(),(req, res) => {
+    const { title, date, description } = req.body;
+
+    console.log(req.body);
 
     const query = 'INSERT INTO EVENTS (EventName, EventDate, Description) VALUES (?, ?, ?)';
-    connection.query(query, [eventName, eventDate, description, mediaFile], (err, results) => {
+    connection.query(query, [title, date, description], (err, results) => {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
         res.status(201).json({
             message: 'Event created successfully',
             eventID: results.insertId,
-            eventName,
-            eventDate,
+            title,
+            date,
             description,
         });
     });
 });
-
-// Configure multer for handling form-data
-const upload = multer(); // In-memory storage or disk storage can be configured
 
 // Update an existing event (admin only)
 router.put('/update-event/:eventID', upload.none(),(req, res) => {
