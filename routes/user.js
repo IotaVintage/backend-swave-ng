@@ -83,7 +83,7 @@ router.get('/search-user/:unpID', (req, res) => {
 
         const user = results[0];
         const hasPassword = user.Password !== null && user.Password.trim() !== '';
-
+        
         res.json({
             unpID: user.UnpID,
             fname: user.Fname,
@@ -139,10 +139,6 @@ router.post('/account-setup', (req, res) => {
                 contactNumber || '', birthday || '2004-01-01', age || 18, sex || '',
                 college || '', program || '', section || '', unpID
             ];
-
-            console.log(hashedPassword, barangay || '', cityTown || '', province || '',
-                contactNumber || '', birthday || '2004-01-01', age || 18, sex || '',
-                college || '', program || '', section || '', unpID);
 
             connection.query(updateQuery, values, (err) => {
                 if (err) {
